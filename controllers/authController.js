@@ -63,12 +63,9 @@ const sendTokenResponse = (user, statusCode, res) => {
 
     res
         .status(statusCode)
-        .cookie('token', token, options) // Token je Session Cookie
+        .cookie('token', token, options) // Token se šalje u HTTP-only cookie-ju (sigurnost!)
         .json({
             success: true,
-            // --------------------------------------------------
-            // UKLONJENO: Ne šaljemo token u telu odgovora
-            // token 
-            // --------------------------------------------------
+            token
         });
 };
