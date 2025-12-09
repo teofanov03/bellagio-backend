@@ -3,7 +3,7 @@
 // ---------------------------------------------------
 // 1. Uvoz Modula i Konfiguracija
 // ---------------------------------------------------
-require('dotenv').config(); // Učitavanje .env varijabli
+require('dotenv').config(); 
 
 const express = require('express');
 const path = require('path');
@@ -11,7 +11,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const cookieParser = require('cookie-parser'); // Dodajemo za rukovanje JWT HTTP-only kolačićima
+const cookieParser = require('cookie-parser');
 
 const app = express();
 
@@ -27,21 +27,25 @@ const authRoutes = require('./routes/auth');
 // 3. Middleware i Sigurnost
 // ---------------------------------------------------
 
+// Određivanje dozvoljenog porekla
+// U produkciji (Render) koristi se CLIENT_URL (koji će biti vaš Vercel domen).
+// U razvoju koristi localhost.
+const allowedOrigin = process.env.CLIENT_URL || 'http://localhost:5173'; 
+
 // Security HTTP headers (Helmet)
 app.use(helmet());
 
-// Enable CORS - Podesite opcije ako je potrebno (npr. samo za određeni domen)
+// Enable CORS
 app.use(cors({
-    origin: 'http://localhost:5173', // Primer: Dozvoli samo Frontend na portu 3000
-    credentials: true, // Važno: Dozvoljava slanje HTTP-only kolačića
+    origin: allowedOrigin, // Dinamičko postavljanje Vercel ili Localhost domena
+    credentials: true, 
 }));
 
 // Cookie Parser (Potrebno za čitanje HTTP-only kolačića)
 app.use(cookieParser());
+
+// Podesite Cross-Origin-Resource-Policy za statičke resurse
 app.use((req, res, next) => {
-    // Ovo rešava ERR_BLOCKED_BY_RESPONSE.NotSameOrigin u nekim browserima.
-    // Postavlja Cross-Origin-Resource-Policy na 'cross-origin' za sve resurse,
-    // što je sigurno jer se vaš Backend koristi kao API i server statičkih resursa.
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     next();
 });
@@ -71,7 +75,7 @@ app.get('/', (req, res) => {
 // Montiranje specifičnih API ruta
 app.use('/api/dishes', dishRoutes);
 app.use('/api/reservations', reservationRoutes);
-app.use('/api/v1/auth', authRoutes); // Koristimo v1 za Auth
+app.use('/api/v1/auth', authRoutes);
 
 
 // ---------------------------------------------------
@@ -81,16 +85,15 @@ app.use('/api/v1/auth', authRoutes); // Koristimo v1 za Auth
 const PORT = process.env.PORT || 5000;
 
 // Konektovanje na MongoDB i pokretanje servera
-// NAPOMENA: Uklanjamo zastarele opcije (useNewUrlParser, useUnifiedTopology, itd.)
 mongoose.connect(process.env.MONGO_URI, {})
     .then(() => {
         console.log('Connected to MongoDB');
         app.listen(PORT, () => {
             console.log(`Server running on port ${PORT}`);
+            console.log(`CORS allowed origin: ${allowedOrigin}`); // Dodato za lakšu proveru
         });
     })
     .catch((err) => {
         console.error('Failed to connect to MongoDB:', err.message || err);
-        // Prekini proces sa greškom
         process.exit(1);
     });
