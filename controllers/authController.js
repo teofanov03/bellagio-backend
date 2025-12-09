@@ -49,11 +49,9 @@ exports.login = async (req, res, next) => {
 const sendTokenResponse = (user, statusCode, res) => {
     const token = user.getSignedJwtToken();
 
-   const options = {
-        // expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000), <-- OBRISANO
-        httpOnly: true,
-        // Dodajemo SameSite opciju za bolju sigurnost
-        sameSite: 'Lax', 
+    const options = {
+        expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRE * 24 * 60 * 60 * 1000),
+        httpOnly: true
     };
 
     // Ako je produkcija, koristi HTTPS
